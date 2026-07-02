@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flip Deal Analyzer</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;color:#1a1a1a;background:#f5f4f0;padding:1.5rem}
+.page{max-width:780px;margin:0 auto;background:#fff;border-radius:12px;padding:2rem;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+h1{font-size:18px;font-weight:500;margin-bottom:.25rem}
+.subtitle{font-size:13px;color:#888;margin-bottom:1.5rem}
+.section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#999;margin:1.5rem 0 .6rem;padding-bottom:.4rem;border-bottom:1px solid #eee}
+.inputs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.inp-wrap{display:flex;flex-direction:column;gap:4px}
+.inp-wrap label{font-size:12px;color:#666}
+input[type=number],input[type=text]{width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:7px;font-size:14px;font-family:inherit;background:#fafafa;color:#1a1a1a}
+input:focus{outline:none;border-color:#378ADD;background:#fff}
+.rehab-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0}
+.rehab-row:last-child{border-bottom:none}
+.qty-row{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0}
+.rehab-label{font-size:13px;font-weight:500}
+.rehab-sub{font-size:11px;color:#aaa;margin-top:2px}
+.tier-grp{display:flex;gap:3px;flex-wrap:wrap}
+.tier-btn{font-size:11px;padding:3px 8px;border:1px solid #ddd;background:#fff;color:#666;border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.tier-btn:hover{background:#f0f0f0}
+.tier-btn.active{background:#e8f0fb;color:#185FA5;border-color:#9bbfe8}
+.rehab-cost{font-size:13px;font-weight:500;min-width:72px;text-align:right;color:#888}
+.sw{position:relative;display:inline-block;width:34px;height:19px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0}
+.sw-track{position:absolute;inset:0;background:#ccc;border-radius:19px;cursor:pointer;transition:.2s}
+.sw input:checked+.sw-track{background:#378ADD}
+.sw-track:before{content:"";position:absolute;height:13px;width:13px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.2s}
+.sw input:checked+.sw-track:before{transform:translateX(15px)}
+.rehab-total-row{display:flex;justify-content:space-between;align-items:center;padding:.85rem 0;margin-top:.25rem;border-top:1px solid #eee}
+.info-band{background:#f7f6f2;border-radius:8px;padding:.75rem 1rem;margin:.75rem 0;display:flex;gap:1.5rem;flex-wrap:wrap}
+.info-cell .lbl{font-size:11px;color:#aaa}
+.info-cell .val{font-size:14px;font-weight:500;color:#1a1a1a}
+.toggle-row{display:flex;gap:0;margin-bottom:.75rem;border:1px solid #ddd;border-radius:7px;overflow:hidden;width:fit-content}
+.toggle-btn{font-size:12px;padding:6px 14px;background:#fff;color:#666;border:none;cursor:pointer;transition:all .15s}
+.toggle-btn.active{background:#e8f0fb;color:#185FA5}
+.realtor-opts{display:flex;gap:0;border:1px solid #ddd;border-radius:7px;overflow:hidden;width:fit-content}
+.realtor-btn{font-size:12px;padding:6px 14px;background:#fff;color:#666;border:none;cursor:pointer;transition:all .15s}
+.realtor-btn.active{background:#e8f0fb;color:#185FA5}
+.hold-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-bottom:.75rem}
+.hold-item{background:#f7f6f2;border-radius:8px;padding:.65rem .85rem;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hold-item-label{font-size:12px;color:#666}
+.cash-card{background:#fff;border:2px solid #378ADD;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem}
+.cash-card-title{font-size:11px;color:#185FA5;font-weight:600;margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.06em}
+.cash-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #f0f0f0;color:#1a1a1a}
+.cash-row:last-child{border-bottom:none;font-weight:600;font-size:15px;padding-top:10px}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:1.25rem}
+.metric-card{background:#f7f6f2;border-radius:8px;padding:1rem}
+.metric-label{font-size:12px;color:#888;margin-bottom:4px}
+.metric-val{font-size:21px;font-weight:500}
+.metric-val.good{color:#3B6D11}
+.metric-val.warn{color:#854F0B}
+.metric-val.bad{color:#A32D2D}
+.waterfall{border:1px solid #eee;border-radius:10px;overflow:hidden;margin-bottom:1.25rem}
+.wf-row{display:grid;grid-template-columns:1fr 80px 100px;align-items:center;gap:12px;padding:9px 1rem;border-bottom:1px solid #f0f0f0;font-size:13px}
+.wf-row:last-child{border-bottom:none}
+.wf-row.total{background:#f7f6f2;font-weight:600;font-size:14px}
+.wf-amt{text-align:right;font-variant-numeric:tabular-nums}
+.wf-bar-wrap{height:6px;background:#eee;border-radius:3px;overflow:hidden}
+.wf-bar{height:100%;border-radius:3px}
+.verdict{border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem;border:1px solid}
+.mao-block{background:#f7f6f2;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem}
+.qty-inputs{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.qty-inputs label{font-size:11px;color:#aaa;white-space:nowrap}
+.qty-inputs input{width:70px}
+.export-bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:1rem;padding-top:1rem;border-top:1px solid #eee}
+.btn{padding:8px 16px;border:1px solid #ddd;background:#fff;color:#333;border-radius:7px;font-size:13px;font-family:inherit;cursor:pointer;transition:all .15s}
+.btn:hover{background:#f5f5f5}
+.btn.primary{background:#185FA5;color:#fff;border-color:#185FA5}
+.btn.primary:hover{background:#0c447c}
+#copy-confirm{font-size:12px;color:#3B6D11;display:none;margin-top:6px}
+.placeholder-msg{font-size:13px;color:#aaa;padding:.5rem 0}
+@media print{.export-bar{display:none}.page{box-shadow:none;padding:1rem}}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Flip Deal Analyzer</h1>
+  <p class="subtitle">Fill in the deal — everything calculates automatically.</p>
+
+  <div class="section-label">Property info</div>
+  <div class="inputs-grid">
+    <div class="inp-wrap" style="grid-column:span 2"><label>Address / deal name</label><input type="text" id="address" placeholder="123 Main St"></div>
+    <div class="inp-wrap"><label>Square footage</label><input type="number" id="sqft" placeholder="0" step="50"></div>
+    <div class="inp-wrap"><label>ARV</label><input type="number" id="arv" placeholder="$0" step="1000"></div>
+    <div class="inp-wrap"><label>Purchase price</label><input type="number" id="purchase" placeholder="$0" step="1000"></div>
+    <div class="inp-wrap"><label>Holding months</label><input type="number" id="months" placeholder="0" min="1" max="24" step="1"></div>
+  </div>
+
+  <div class="section-label">Rehab scope</div>
+  <div style="font-size:11px;color:#aaa;margin-bottom:.6rem">Toggle items on, pick a level. Per-sqft items use square footage above.</div>
+  <div id="rehab-rows"></div>
+  <div class="rehab-total-row">
+    <span style="font-size:13px;font-weight:600">Total rehab estimate</span>
+    <span style="font-size:18px;font-weight:600" id="rehab-total">$0</span>
+  </div>
+
+  <div class="section-label">Hard money — loan to cost (LTC)</div>
+  <div class="inputs-grid" style="margin-bottom:.5rem">
+    <div class="inp-wrap"><label>Acquisition down payment %</label><input type="number" id="down-pct-acq" placeholder="10" step="5" min="0" max="100"></div>
+    <div class="inp-wrap"><label>Rehab down payment %</label><input type="number" id="down-pct-rehab" placeholder="0" step="5" min="0" max="100"></div>
+    <div class="inp-wrap"><label>Points (origination %)</label><input type="number" id="points" placeholder="2" step="0.5" min="0" max="10"></div>
+    <div class="inp-wrap"><label>Interest rate (annual %)</label><input type="number" id="rate" placeholder="12" step="0.5" min="0" max="20"></div>
+  </div>
+  <div style="font-size:12px;color:#888;margin-bottom:.75rem">Points apply to the total loan amount (lender's share of purchase + rehab)</div>
+  <div class="info-band">
+    <div class="info-cell"><div class="lbl">Purchase price</div><div class="val" id="inf-purchase">—</div></div>
+    <div class="info-cell"><div class="lbl">Acq. down payment</div><div class="val" id="down-amt-acq">—</div></div>
+    <div class="info-cell"><div class="lbl">Rehab down payment</div><div class="val" id="down-amt-rehab">—</div></div>
+    <div class="info-cell"><div class="lbl">Total down payment</div><div class="val" id="down-amt-total">—</div></div>
+    <div class="info-cell"><div class="lbl">Total loan amount</div><div class="val" id="loan-amt">—</div></div>
+    <div class="info-cell"><div class="lbl">Origination fee</div><div class="val" id="orig-fee">—</div></div>
+    <div class="info-cell"><div class="lbl">Monthly interest</div><div class="val" id="monthly-int">—</div></div>
+    <div class="info-cell"><div class="lbl">Total interest</div><div class="val" id="total-int">—</div></div>
+  </div>
+
+  <div class="section-label">Wholesale fee</div>
+  <div class="toggle-row">
+    <button class="toggle-btn" id="btn-buyer" onclick="setWsMode('buyer')">Paying fee</button>
+    <button class="toggle-btn" id="btn-seller" onclick="setWsMode('seller')">Collecting fee</button>
+    <button class="toggle-btn active" id="btn-none" onclick="setWsMode('none')">No fee</button>
+  </div>
+  <div id="ws-buyer-panel" style="display:none"><div class="inp-wrap" style="max-width:200px;margin-bottom:.75rem"><label>Wholesale fee paid</label><input type="number" id="ws-fee-paid" placeholder="$0" step="1000"></div></div>
+  <div id="ws-seller-panel" style="display:none"><div class="inp-wrap" style="max-width:200px;margin-bottom:.75rem"><label>Assignment fee collected</label><input type="number" id="ws-fee-collect" placeholder="$0" step="1000"></div></div>
+
+  <div class="section-label">Selling costs</div>
+  <div style="display:flex;align-items:flex-start;gap:24px;flex-wrap:wrap">
+    <div>
+      <div style="font-size:12px;color:#666;margin-bottom:6px">Realtor commission</div>
+      <div class="realtor-opts">
+        <button class="realtor-btn active" id="rbtn-0" onclick="setRealtor(0)">0% — no agent</button>
+        <button class="realtor-btn" id="rbtn-3" onclick="setRealtor(3)">3% — our side</button>
+        <button class="realtor-btn" id="rbtn-6" onclick="setRealtor(6)">6% — both sides</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:12px;color:#666;margin-bottom:6px">Seller closing costs</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <label class="sw"><input type="checkbox" id="seller-closing-toggle"><span class="sw-track"></span></label>
+        <span style="font-size:12px;color:#666" id="seller-closing-label">Off</span>
+      </div>
+      <div class="inp-wrap" id="seller-closing-wrap" style="max-width:130px;opacity:.4">
+        <label>% of ARV</label>
+        <input type="number" id="seller-closing-pct" placeholder="1" step="0.5" min="0" max="5">
+      </div>
+    </div>
+  </div>
+  <div class="info-band" style="margin-top:.75rem">
+    <div class="info-cell"><div class="lbl">Realtor commission</div><div class="val" id="realtor-cost">—</div></div>
+    <div class="info-cell"><div class="lbl">Seller closing costs</div><div class="val" id="seller-closing-cost">—</div></div>
+    <div class="info-cell"><div class="lbl">Total selling costs</div><div class="val" id="total-selling-cost">—</div></div>
+  </div>
+
+  <div class="section-label">Acquisition closing costs</div>
+  <div class="inp-wrap" style="max-width:180px">
+    <label>% of purchase price</label>
+    <input type="number" id="closing-pct" placeholder="2" step="0.5" min="0" max="5">
+  </div>
+
+  <div class="section-label">Monthly holding costs</div>
+  <div class="hold-grid">
+    <div class="hold-item"><div class="hold-item-label">Insurance / mo</div><input type="number" id="insurance-mo" placeholder="200" step="50" style="width:75px;text-align:right;border:1px solid #ddd;border-radius:6px;padding:4px 6px"></div>
+    <div class="hold-item"><div class="hold-item-label">Utilities / mo</div><input type="number" id="utilities-mo" placeholder="150" step="50" style="width:75px;text-align:right;border:1px solid #ddd;border-radius:6px;padding:4px 6px"></div>
+    <div class="hold-item"><div class="hold-item-label">Taxes / mo</div><input type="number" id="taxes-mo" placeholder="150" step="50" style="width:75px;text-align:right;border:1px solid #ddd;border-radius:6px;padding:4px 6px"></div>
+    <div class="hold-item"><div class="hold-item-label">Other / mo</div><input type="number" id="other-mo" placeholder="0" step="50" style="width:75px;text-align:right;border:1px solid #ddd;border-radius:6px;padding:4px 6px"></div>
+  </div>
+  <div class="info-band">
+    <div class="info-cell"><div class="lbl">Total holding / mo</div><div class="val" id="hold-mo-total">—</div></div>
+    <div class="info-cell"><div class="lbl">Total holding cost</div><div class="val" id="hold-total">—</div></div>
+    <div class="info-cell"><div class="lbl">Monthly burn (hold + interest)</div><div class="val" id="monthly-burn">—</div></div>
+  </div>
+
+  <div class="section-label">Cash needed to close</div>
+  <div class="cash-card">
+    <div class="cash-card-title">Money out of pocket at closing</div>
+    <div class="cash-row"><span>Acquisition down payment</span><span id="ctc-down-acq">—</span></div>
+    <div class="cash-row"><span>Rehab down payment</span><span id="ctc-down-rehab">—</span></div>
+    <div class="cash-row"><span>Origination points</span><span id="ctc-points">—</span></div>
+    <div class="cash-row"><span>Acquisition closing costs</span><span id="ctc-closing">—</span></div>
+    <div class="cash-row" id="ctc-ws-row" style="display:none"><span id="ctc-ws-label">Wholesale fee</span><span id="ctc-ws">—</span></div>
+    <div class="cash-row"><span>Total cash needed to close</span><span id="ctc-total" style="color:#185FA5">—</span></div>
+  </div>
+
+  <div class="section-label">Deal results</div>
+  <div class="metric-grid" id="metric-grid"><p class="placeholder-msg">Enter deal info above to see results.</p></div>
+  <div class="waterfall" id="waterfall"></div>
+  <div class="verdict" id="verdict" style="display:none"></div>
+
+  <div class="mao-block">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:.5rem">
+      <div><div style="font-size:12px;color:#888">Max allowable offer (70% rule)</div><div style="font-size:20px;font-weight:600" id="mao">—</div></div>
+      <div style="text-align:right"><div style="font-size:12px;color:#888">You're paying</div><div style="font-size:20px;font-weight:600" id="vs-mao">—</div></div>
+    </div>
+    <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden"><div id="mao-bar" style="height:100%;border-radius:3px;transition:width .3s;width:0%"></div></div>
+    <div style="font-size:11px;color:#aaa;margin-top:5px">70% × ARV − rehab = MAO</div>
+  </div>
+
+  <div class="export-bar">
+    <button class="btn primary" onclick="exportPDF()">&#8595; Export / Print PDF</button>
+    <button class="btn" onclick="copySnapshot()">&#9112; Copy deal summary</button>
+    <button class="btn" onclick="resetForm()">&#8635; New blank deal</button>
+  </div>
+  <div id="copy-confirm">Copied to clipboard!</div>
+</div>
+
+<script>
+const REHAB_ITEMS=[
+  {id:'bath-small',label:'Small bathrooms',sub:'Up to 2 — vanity, tile, fixtures',type:'flat',tiers:[{l:'L1',v:5000},{l:'L2',v:10000},{l:'L3',v:18000}]},
+  {id:'bath-master',label:'Master bathroom',sub:'Full remodel',type:'flat',tiers:[{l:'L1',v:7000},{l:'L2',v:14000},{l:'L3',v:28000}]},
+  {id:'kitchen',label:'Kitchen',sub:'Cabinets, counters, appliances',type:'flat',tiers:[{l:'L1',v:8000},{l:'L2',v:18000},{l:'L3',v:35000}]},
+  {id:'floors',label:'Flooring',sub:'LVP / hardwood — per sq ft',type:'sqft',tiers:[{l:'Budget',v:3},{l:'Mid',v:5},{l:'Premium',v:8}]},
+  {id:'paint-int',label:'Interior paint',sub:'Walls, ceilings, trim — per sq ft',type:'sqft',tiers:[{l:'Budget',v:1.5},{l:'Mid',v:2.5},{l:'Premium',v:4}]},
+  {id:'paint-ext',label:'Exterior paint',sub:'Full exterior',type:'flat',tiers:[{l:'Standard',v:3500},{l:'Large',v:6000},{l:'+ Detail',v:9000}]},
+  {id:'siding',label:'Siding repair',sub:'Partial or full replacement',type:'flat',tiers:[{l:'Minimal',v:2500},{l:'Moderate',v:8000},{l:'Full',v:20000}]},
+  {id:'roof-repair',label:'Roof — Repair',sub:'Partial repair / patches',type:'flat',tiers:[{l:'Minor',v:3000},{l:'Moderate',v:8000},{l:'Major',v:18000}]},
+  {id:'roof-replace',label:'Roof — Full Replace',sub:'Shingle replacement — per sq ft',type:'sqft',tiers:[{l:'Economy',v:4},{l:'Standard',v:6},{l:'Premium',v:9}]},
+  {id:'hvac',label:'HVAC / AC',sub:'New unit + install',type:'flat',tiers:[{l:'Single',v:5000},{l:'Multi',v:10000},{l:'Full sys',v:18000}]},
+  {id:'electric',label:'Electrical',sub:'Panel, outlets, permits',type:'flat',tiers:[{l:'Minor',v:3000},{l:'Moderate',v:7000},{l:'Rewire',v:18000}]},
+  {id:'plumbing',label:'Plumbing',sub:'Pipes, water heater, fixtures',type:'flat',tiers:[{l:'Minor',v:2000},{l:'Moderate',v:6000},{l:'Repipe',v:15000}]},
+  {id:'landscaping',label:'Landscaping',sub:'Sod, beds, grading',type:'flat',tiers:[{l:'Basic',v:1500},{l:'Standard',v:4000},{l:'Full',v:9000}]},
+  {id:'garage',label:'Garage / driveway',sub:'Door, concrete, apron',type:'flat',tiers:[{l:'Door only',v:1200},{l:'+ Concrete',v:4000},{l:'Full redo',v:9000}]},
+];
+const CUSTOM_QTY_ITEMS=[
+  {id:'windows',label:'Windows',sub:'Quantity × cost per window',qtyLabel:'# of windows',qtyDefault:'',priceLabel:'Cost per window',priceDefault:650},
+  {id:'foundation',label:'Foundation / pier repair',sub:'Number of piers × cost per pier',qtyLabel:'# of piers',qtyDefault:'',priceLabel:'Cost per pier',priceDefault:150},
+];
+
+const rehabState={};
+REHAB_ITEMS.forEach(i=>{rehabState[i.id]={on:false,tier:0};});
+CUSTOM_QTY_ITEMS.forEach(i=>{rehabState[i.id]={on:false};});
+
+function buildRehabRows(){
+  const container=document.getElementById('rehab-rows');
+  REHAB_ITEMS.forEach(item=>{
+    const row=document.createElement('div');
+    row.className='rehab-row';
+    const labelDiv=document.createElement('div');
+    labelDiv.innerHTML=`<div class="rehab-label">${item.label}</div><div class="rehab-sub">${item.sub}</div>`;
+    const tierGrp=document.createElement('div');tierGrp.className='tier-grp';
+    item.tiers.forEach((t,ti)=>{
+      const btn=document.createElement('button');
+      btn.className='tier-btn'+(ti===0?' active':'');btn.textContent=t.l;
+      btn.onclick=()=>{rehabState[item.id].tier=ti;tierGrp.querySelectorAll('.tier-btn').forEach((b,bi)=>b.classList.toggle('active',bi===ti));calc();};
+      tierGrp.appendChild(btn);
+    });
+    const costEl=document.createElement('div');costEl.className='rehab-cost';costEl.id='rcost-'+item.id;costEl.textContent='—';
+    const swLabel=document.createElement('label');swLabel.className='sw';
+    const inp=document.createElement('input');inp.type='checkbox';
+    inp.onchange=()=>{rehabState[item.id].on=inp.checked;calc();};
+    const track=document.createElement('span');track.className='sw-track';
+    swLabel.appendChild(inp);swLabel.appendChild(track);
+    row.appendChild(labelDiv);row.appendChild(tierGrp);row.appendChild(costEl);row.appendChild(swLabel);
+    container.appendChild(row);
+  });
+  CUSTOM_QTY_ITEMS.forEach(item=>{
+    const row=document.createElement('div');row.className='qty-row';
+    const labelDiv=document.createElement('div');
+    labelDiv.innerHTML=`<div class="rehab-label">${item.label}</div><div class="rehab-sub">${item.sub}</div>`;
+    const qtyInputs=document.createElement('div');qtyInputs.className='qty-inputs';
+    qtyInputs.innerHTML=`<label>${item.qtyLabel}</label><input type="number" id="qty-${item.id}" placeholder="0" min="0" step="1" style="width:64px"><label>${item.priceLabel}</label><input type="number" id="price-${item.id}" value="${item.priceDefault}" min="0" step="10" style="width:72px">`;
+    qtyInputs.style.opacity='0.4';
+    const costEl=document.createElement('div');costEl.className='rehab-cost';costEl.id='rcost-'+item.id;costEl.textContent='—';
+    const swLabel=document.createElement('label');swLabel.className='sw';
+    const inp=document.createElement('input');inp.type='checkbox';
+    inp.onchange=()=>{rehabState[item.id].on=inp.checked;qtyInputs.style.opacity=inp.checked?'1':'0.4';calc();};
+    const track=document.createElement('span');track.className='sw-track';
+    swLabel.appendChild(inp);swLabel.appendChild(track);
+    row.appendChild(labelDiv);row.appendChild(qtyInputs);row.appendChild(costEl);row.appendChild(swLabel);
+    container.appendChild(row);
+    qtyInputs.querySelectorAll('input').forEach(el=>el.addEventListener('input',calc));
+  });
+}
+
+let wsMode='none',realtorPct=0;
+function setWsMode(m){wsMode=m;['buyer','seller','none'].forEach(x=>document.getElementById('btn-'+x).classList.toggle('active',x===m));document.getElementById('ws-buyer-panel').style.display=m==='buyer'?'block':'none';document.getElementById('ws-seller-panel').style.display=m==='seller'?'block':'none';calc();}
+function setRealtor(p){realtorPct=p;[0,3,6].forEach(x=>document.getElementById('rbtn-'+x).classList.toggle('active',x===p));calc();}
+
+function fmt(n){return '$'+Math.round(n).toLocaleString();}
+function pct(n){return (Math.round(n*10)/10)+'%';}
+function v(id,fb){return parseFloat(document.getElementById(id).value)||fb;}
+
+let lastCalc={};
+
+function calc(){
+  const sqft=v('sqft',0);
+  let rehabTotal=0;
+
+  REHAB_ITEMS.forEach(item=>{
+    const s=rehabState[item.id];let cost=0;
+    if(s.on){const val=item.tiers[s.tier].v;cost=item.type==='sqft'?val*sqft:val;}
+    rehabTotal+=cost;
+    const el=document.getElementById('rcost-'+item.id);if(el)el.textContent=cost>0?fmt(cost):'—';
+  });
+  CUSTOM_QTY_ITEMS.forEach(item=>{
+    const s=rehabState[item.id];let cost=0;
+    if(s.on){const qty=parseFloat(document.getElementById('qty-'+item.id).value)||0;const price=parseFloat(document.getElementById('price-'+item.id).value)||0;cost=qty*price;}
+    rehabTotal+=cost;
+    const el=document.getElementById('rcost-'+item.id);if(el)el.textContent=cost>0?fmt(cost):'—';
+  });
+  document.getElementById('rehab-total').textContent=fmt(rehabTotal);
+
+  const arv=v('arv',0),purchase=v('purchase',0),months=v('months',0);
+  const downPctAcq=v('down-pct-acq',0),downPctRehab=v('down-pct-rehab',0);
+  const points=v('points',0),rate=v('rate',0),closingPct=v('closing-pct',0);
+  const insuranceMo=v('insurance-mo',0),utilitiesMo=v('utilities-mo',0),taxesMo=v('taxes-mo',0),otherMo=v('other-mo',0);
+  const sellerClosingOn=document.getElementById('seller-closing-toggle').checked;
+  const sellerClosingPct=v('seller-closing-pct',0);
+
+  document.getElementById('seller-closing-label').textContent=sellerClosingOn?`On — ${sellerClosingPct}% of ARV`:'Off';
+  document.getElementById('seller-closing-wrap').style.opacity=sellerClosingOn?'1':'0.4';
+
+  // Split LTC financing
+  const downAmtAcq=purchase*downPctAcq/100;
+  const downAmtRehab=rehabTotal*downPctRehab/100;
+  const downAmt=downAmtAcq+downAmtRehab;
+  const lenderAcq=purchase-downAmtAcq;
+  const lenderRehab=rehabTotal-downAmtRehab;
+  const loanAmt=lenderAcq+lenderRehab;
+  const origFee=loanAmt*points/100;
+  const monthlyInt=loanAmt*(rate/100)/12;
+  const totalInt=monthlyInt*months;
+  const totalFin=origFee+totalInt;
+
+  const set=function(id,val){const el=document.getElementById(id);if(el)el.textContent=val;};
+  set('inf-purchase', purchase>0?fmt(purchase):'—');
+  set('down-amt-acq', downAmtAcq>0?fmt(downAmtAcq):'—');
+  set('down-amt-rehab', downPctRehab===0&&rehabTotal>0?'$0 — lender covers 100%':downAmtRehab>0?fmt(downAmtRehab):'—');
+  set('down-amt-total', downAmt>0?fmt(downAmt):'—');
+  set('loan-amt', loanAmt>0?fmt(loanAmt):'—');
+  set('orig-fee', origFee>0?fmt(origFee):'—');
+  set('monthly-int', monthlyInt>0?fmt(monthlyInt):'—');
+  set('total-int', totalInt>0?fmt(totalInt):'—');
+
+  const holdMoTotal=insuranceMo+utilitiesMo+taxesMo+otherMo;
+  const holdTotal=holdMoTotal*months;
+  const monthlyBurn=holdMoTotal+monthlyInt;
+  set('hold-mo-total', holdMoTotal>0?fmt(holdMoTotal):'—');
+  set('hold-total', holdTotal>0?fmt(holdTotal):'—');
+  set('monthly-burn', monthlyBurn>0?fmt(monthlyBurn):'—');
+
+  const realtorCost=arv*realtorPct/100;
+  const sellerClosingCost=sellerClosingOn?arv*sellerClosingPct/100:0;
+  const totalSellingCost=realtorCost+sellerClosingCost;
+  set('realtor-cost', realtorCost>0?fmt(realtorCost):'—');
+  set('seller-closing-cost', sellerClosingCost>0?fmt(sellerClosingCost):'—');
+  set('total-selling-cost', totalSellingCost>0?fmt(totalSellingCost):'—');
+
+  const closingCost=purchase*closingPct/100;
+  let wsFeeOut=0,wsFeeIn=0;
+  if(wsMode==='buyer') wsFeeOut=v('ws-fee-paid',0);
+  if(wsMode==='seller') wsFeeIn=v('ws-fee-collect',0);
+  const ctcWsRow=document.getElementById('ctc-ws-row');
+  if(ctcWsRow){
+    if(wsMode==='buyer'){ctcWsRow.style.display='flex';set('ctc-ws',fmt(wsFeeOut));}
+    else ctcWsRow.style.display='none';
+  }
+
+  const ctcTotal=downAmt+origFee+closingCost+wsFeeOut;
+  set('ctc-down-acq', downAmtAcq>0?fmt(downAmtAcq):'—');
+  set('ctc-down-rehab', downPctRehab===0&&rehabTotal>0?'$0':downAmtRehab>0?fmt(downAmtRehab):'—');
+  set('ctc-points', origFee>0?fmt(origFee):'—');
+  set('ctc-closing', closingCost>0?fmt(closingCost):'—');
+  set('ctc-total', ctcTotal>0?fmt(ctcTotal):'—');
+
+  const totalCost=purchase+rehabTotal+closingCost+totalSellingCost+holdTotal+totalFin+wsFeeOut;
+  const profit=arv-totalCost+wsFeeIn;
+  const roi=ctcTotal>0?(profit/ctcTotal)*100:0;
+  const mao=arv*0.70-rehabTotal;
+
+  lastCalc={arv,purchase,rehabTotal,months,downPctAcq,downPctRehab,downAmtAcq,downAmtRehab,downAmt,loanAmt,origFee,monthlyInt,totalInt,totalFin,closingCost,realtorCost,sellerClosingCost,holdTotal,holdMoTotal,monthlyBurn,wsFeeOut,wsFeeIn,totalSellingCost,ctcTotal,profit,roi,mao};
+
+  if(arv===0&&purchase===0){
+    document.getElementById('metric-grid').innerHTML='<p class="placeholder-msg">Enter deal info above to see results.</p>';
+    document.getElementById('waterfall').innerHTML='';
+    document.getElementById('verdict').style.display='none';
+    set('mao','—');set('vs-mao','—');
+    document.getElementById('mao-bar').style.width='0%';
+    return;
+  }
+  document.getElementById('verdict').style.display='block';
+
+  const metrics=[
+    {label:'Net profit',val:fmt(profit),cls:profit>30000?'good':profit>0?'warn':'bad'},
+    {label:'ROI on cash in',val:pct(roi),cls:roi>20?'good':roi>10?'warn':'bad'},
+    {label:'Cash to close',val:ctcTotal>0?fmt(ctcTotal):'—',cls:''},
+    {label:'Total financing cost',val:totalFin>0?fmt(totalFin):'—',cls:''}
+  ];
+  const mg=document.getElementById('metric-grid');mg.innerHTML='';
+  metrics.forEach(m=>{mg.innerHTML+=`<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-val ${m.cls}">${m.val}</div></div>`;});
+
+  const rows=[
+    {label:'Sale price (ARV)',amt:arv,color:'#639922'},
+    {label:'Purchase price',amt:-purchase,color:'#E24B4A'},
+    {label:'Rehab costs',amt:-rehabTotal,color:'#E24B4A'},
+    {label:'Hard money (points + interest)',amt:-totalFin,color:'#D85A30'},
+    {label:'Acquisition closing costs',amt:-closingCost,color:'#BA7517'},
+    {label:'Realtor commission',amt:-realtorCost,color:'#BA7517'},
+    {label:'Seller closing costs',amt:-sellerClosingCost,color:'#BA7517'},
+    {label:'Insurance + utilities + taxes',amt:-holdTotal,color:'#888'},
+  ];
+  if(wsFeeOut>0) rows.push({label:'Wholesale fee paid',amt:-wsFeeOut,color:'#7F77DD'});
+  if(wsFeeIn>0) rows.push({label:'Assignment fee collected',amt:wsFeeIn,color:'#639922'});
+
+  const wf=document.getElementById('waterfall');wf.innerHTML='';
+  rows.forEach(r=>{
+    if(r.amt===0)return;
+    const barW=Math.min(100,Math.round(Math.abs(r.amt)/Math.max(arv,1)*100));
+    const amtColor=r.amt>0?'#3B6D11':'#666';
+    wf.innerHTML+=`<div class="wf-row"><div>${r.label}</div><div class="wf-bar-wrap"><div class="wf-bar" style="width:${barW}%;background:${r.color}"></div></div><div class="wf-amt" style="color:${amtColor}">${r.amt>0?'+':''}${fmt(r.amt)}</div></div>`;
+  });
+  wf.innerHTML+=`<div class="wf-row total"><div>Net profit</div><div></div><div class="wf-amt" style="color:${profit>0?'#3B6D11':'#A32D2D'}">${profit>=0?'+':''}${fmt(profit)}</div></div>`;
+
+  const verdict=document.getElementById('verdict');
+  let vbg,vborder,vtitle,vtext;
+  if(profit>40000&&roi>20){vtitle='Strong deal';vtext=`Solid margin at ${pct(roi)} ROI on cash in. Monthly burn is ${fmt(monthlyBurn)} — keep that timeline tight.`;vbg='#f0f7e8';vborder='#b6d98a';}
+  else if(profit>15000&&roi>10){vtitle='Marginal deal';vtext=`Workable numbers. Every extra month costs ${fmt(monthlyBurn)} — scope creep and timeline slippage are your biggest risks.`;vbg='#fdf3e3';vborder='#f5c97a';}
+  else{vtitle='Deal needs work';vtext=`Numbers are too thin right now. Try negotiating the purchase price down, cutting rehab scope, or eliminating realtor fees.`;vbg='#fdf0f0';vborder='#f5a0a0';}
+  verdict.style.background=vbg;verdict.style.borderColor=vborder;
+  verdict.innerHTML=`<div style="font-weight:600;margin-bottom:4px">${vtitle}</div><div style="font-size:13px;color:#555">${vtext}</div>`;
+
+  set('mao', mao>0?fmt(mao):'—');
+  if(purchase>0&&mao>0){
+    const aboveBelow=purchase-mao,diff=Math.abs(aboveBelow);
+    set('vs-mao', aboveBelow<=0?fmt(diff)+' under MAO':fmt(diff)+' over MAO');
+    const vsMaoEl=document.getElementById('vs-mao');
+    if(vsMaoEl) vsMaoEl.style.color=aboveBelow<=0?'#3B6D11':'#A32D2D';
+    document.getElementById('mao-bar').style.width=Math.min(100,Math.round((purchase/mao)*100))+'%';
+    document.getElementById('mao-bar').style.background=aboveBelow<=0?'#639922':'#E24B4A';
+  }
+}
+
+
+function copySnapshot(){
+  navigator.clipboard.writeText(buildSnapshotText()).then(()=>{
+    const el=document.getElementById('copy-confirm');el.style.display='block';setTimeout(()=>el.style.display='none',2500);
+  });
+}
+
+function exportPDF(){window.print();}
+
+function resetForm(){
+  if(!confirm('Clear all fields and start a new deal?'))return;
+  document.querySelectorAll('input[type=number],input[type=text]').forEach(el=>el.value='');
+  document.querySelectorAll('input[type=checkbox]').forEach(el=>{el.checked=false;el.dispatchEvent(new Event('change'));});
+  CUSTOM_QTY_ITEMS.forEach(item=>{document.getElementById('price-'+item.id).value=item.priceDefault;});
+  REHAB_ITEMS.forEach(item=>{rehabState[item.id]={on:false,tier:0};document.querySelectorAll('#rehab-rows .tier-btn').forEach((btn,i)=>{});});
+  document.querySelectorAll('.tier-btn').forEach(btn=>btn.classList.remove('active'));
+  document.querySelectorAll('.rehab-row').forEach(row=>{const btns=row.querySelectorAll('.tier-btn');if(btns.length)btns[0].classList.add('active');});
+  setWsMode('none');setRealtor(0);
+  document.getElementById('seller-closing-toggle').checked=false;
+  calc();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+buildRehabRows();
+['arv','purchase','sqft','months','down-pct-acq','down-pct-rehab','points','rate','closing-pct','insurance-mo','utilities-mo','taxes-mo','other-mo','seller-closing-pct','ws-fee-paid','ws-fee-collect'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',calc);});
+document.getElementById('seller-closing-toggle').addEventListener('change',calc);
+calc();
+</script>
+</div>
+</body>
+</html>
